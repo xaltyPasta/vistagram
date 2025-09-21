@@ -50,15 +50,6 @@ export default function Header({ onUploadClick }: HeaderProps) {
                         </div>
                     ) : session?.user ? (
                         <>
-                            {/* Upload Icon */}
-                            <i
-                                className="bi bi-upload fs-4 text-primary"
-                                role="button"
-                                style={{ cursor: "pointer" }}
-                                onClick={handleUploadClick}
-                                title="Upload"
-                            ></i>
-
                             {/* Profile Dropdown */}
                             <div className="position-relative">
                                 <Image
