@@ -57,20 +57,17 @@ export default function PostCard({ post, onLikeChange }: PostCardProps) {
             const data = await res.json();
             setShareCount(data.share_count);
 
-            // ✅ Construct the share URL using shortCode from backend
             if (data.shortCode) {
                 const shareLink = `${window.location.origin}/api/share/${data.shortCode}`;
                 navigator.clipboard.writeText(shareLink);
                 alert(`Share link copied to clipboard:\n${shareLink}`);
             }
 
-            
             if (onLikeChange) onLikeChange({ ...post, share_count: data.share_count });
         } catch (err) {
             console.error("Error sharing post:", err);
         }
     };
-
 
     const formatDate = (dateInput: string | Date) => {
         const date = typeof dateInput === "string" ? new Date(dateInput) : dateInput;
@@ -119,8 +116,8 @@ export default function PostCard({ post, onLikeChange }: PostCardProps) {
                 </div>
 
                 <button
-                    className="btn btn-link d-flex align-items-center p-0 text-dark"
-                    style={{ fontSize: "1.5rem" }}
+                    className="btn d-flex align-items-center p-0 text-dark"
+                    style={{ fontSize: "1.5rem", textDecoration: "none" }}
                     onClick={handleShare}
                 >
                     <FaShare className="me-2" size={24} /> {shareCount}
@@ -137,12 +134,11 @@ export default function PostCard({ post, onLikeChange }: PostCardProps) {
             {/* Bottom actions: Heart icon centered + Caption below */}
             <div className="d-flex flex-column align-items-center px-3 py-3">
                 <button
-                    className={`btn btn-link d-flex align-items-center justify-content-center p-0 ${isLiked ? "text-danger" : "text-dark"
-                        }`}
-                    style={{ fontSize: "3rem" }}
+                    className={`btn d-flex align-items-center justify-content-center p-0 ${isLiked ? "text-danger" : "text-dark"}`}
+                    style={{ fontSize: "3rem", textDecoration: "none" }}
                     onClick={handleLike}
                 >
-                    <FaHeart size={40} />
+                    <FaHeart size={40} className="me-2" /> {likeCount}
                 </button>
 
                 {post.caption && (
