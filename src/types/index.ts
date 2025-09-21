@@ -16,7 +16,7 @@ export interface Post {
     createdAt: Date;
     like_count: number;
     share_count: number;
-    user?: User;
+    user?: User | null;
     is_liked?: boolean;
     is_shared?: boolean;
 }
