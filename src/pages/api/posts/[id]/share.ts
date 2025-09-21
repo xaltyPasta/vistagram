@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
+// Generate a random short code
 function generateShortCode(): string {
   return Math.random().toString(36).substring(2, 10);
 }
@@ -20,9 +21,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
   try {
-    // ✅ Check if user already shared
+    // Check if this user already shared
     const existingShare = await prisma.share.findUnique({
-      where: { userId_postId: { userId, postId } }, // requires composite unique
+      where: { userId_postId: { userId, postId } }, // requires composite unique key in Prisma
     });
 
     if (existingShare) {
@@ -30,11 +31,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(200).json({
         share_count: post?.share_count || 0,
         is_shared: true,
-        shortCode: existingShare.shortCode, // always return code
+        shortCode: existingShare.shortCode,
       });
     }
 
-    // Generate unique short code
+    // Generate a unique short code
     let shortCode = generateShortCode();
     let attempts = 0;
     while (attempts < 10) {
@@ -43,10 +44,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       shortCode = generateShortCode();
       attempts++;
     }
+
     if (attempts === 10) return res.status(500).json({ error: "Failed to generate unique share code" });
 
-    // Create share & increment post share_count atomically
-    const updatedPost = await prisma.$transaction(async (tx: typeof prisma) => {
+    // ✅ Create share & increment post share_count atomically
+    const updatedPost = await prisma.$transaction(async (tx) => {
       await tx.share.create({ data: { userId, postId, shortCode } });
       const post = await tx.post.update({
         where: { id: postId },
