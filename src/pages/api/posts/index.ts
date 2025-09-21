@@ -25,15 +25,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         },
       });
 
-      const formattedPosts = posts.map((post:Post) => ({
+      const formattedPosts = posts.map((post: Post) => ({
         id: post.id,
-        userId: post.userId,
+        userId: post.userId ?? null,
         imageUrl: post.imageUrl,
-        caption: post.caption,
+        caption: post.caption ?? null,
         createdAt: post.createdAt,
         like_count: post.like_count || 0,
         share_count: post.share_count || 0,
-        is_liked: post.is_liked,
+        is_liked: post.is_liked ?? false,
+        is_shared: post.is_shared ?? false, // optional, if you want
         user: post.user
           ? {
             id: post.user.id,
@@ -41,7 +42,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             email: post.user.email,
             image: post.user.image,
           }
-          : undefined,
+          : null, // keep null instead of undefined to match Post type
       }));
 
       res.status(200).json(formattedPosts);
