@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { Post } from "@/types";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === "GET") {
@@ -24,15 +25,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         },
       });
 
-      const formattedPosts = posts.map((post: { id: any; userId: any; imageUrl: any; caption: any; createdAt: any; likeCount: any; shareCount: any; likes: string | any[]; user: { id: any; name: any; email: any; image: any; }; }) => ({
+      const formattedPosts = posts.map((post:Post) => ({
         id: post.id,
         userId: post.userId,
         imageUrl: post.imageUrl,
         caption: post.caption,
         createdAt: post.createdAt,
-        like_count: post.likeCount || 0,
-        share_count: post.shareCount || 0,
-        is_liked: post.likes && post.likes.length > 0,
+        like_count: post.like_count || 0,
+        share_count: post.share_count || 0,
+        is_liked: post.is_liked,
         user: post.user
           ? {
             id: post.user.id,
