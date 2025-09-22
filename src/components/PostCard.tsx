@@ -1,7 +1,8 @@
 import Image from "next/image";
 import { useState, useEffect } from "react";
 import { Post } from "@/types";
-import { FaHeart, FaShare } from "react-icons/fa";
+import { FaShare } from "react-icons/fa";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface PostCardProps {
     post: Post;
@@ -115,31 +116,53 @@ export default function PostCard({ post, onLikeChange }: PostCardProps) {
                     </div>
                 </div>
 
-                <button
-                    className="btn d-flex align-items-center p-0 text-dark"
-                    style={{ fontSize: "1.5rem", textDecoration: "none" }}
+                <motion.button
                     onClick={handleShare}
+                    className="btn d-flex align-items-center p-2"
+                    style={{
+                        fontSize: "1.2rem",
+                        backgroundColor: "transparent",
+                        color: shareCount > 0 ? "#1DA1F2" : "#000",
+                        border: "2px solid #1DA1F2",
+                        borderRadius: "50px",
+                        cursor: "pointer",
+                        outline: "none",
+                    }}
+                    whileTap={{ scale: 1.3 }}
+                    animate={{ backgroundColor: shareCount > 0 ? "#1DA1F2" : "transparent", color: shareCount > 0 ? "white" : "#000" }}
                 >
-                    <FaShare className="me-2" size={24} /> {shareCount}
-                </button>
+                    <FaShare className="me-2" size={20} />
+                    {shareCount}
+                </motion.button>
             </div>
 
             {/* Post Image */}
-            {post.imageUrl && (
-                <div className="position-relative" style={{ width: "100%", paddingTop: "100%" }}>
-                    <Image src={post.imageUrl} alt="Post image" fill className="object-fit-cover rounded" />
-                </div>
-            )}
+            {
+                post.imageUrl && (
+                    <div className="position-relative" style={{ width: "100%", paddingTop: "100%" }}>
+                        <Image src={post.imageUrl} alt="Post image" fill className="object-fit-cover rounded" />
+                    </div>
+                )
+            }
 
-            {/* Bottom actions: Heart icon centered + Caption below */}
+            {/* Bottom actions: Framer Motion Heart + Caption */}
             <div className="d-flex flex-column align-items-center px-3 py-3">
-                <button
-                    className={`btn d-flex align-items-center justify-content-center p-0 ${isLiked ? "text-danger" : "text-dark"}`}
-                    style={{ fontSize: "3rem", textDecoration: "none" }}
+                <motion.button
                     onClick={handleLike}
+                    className="btn p-0 d-flex align-items-center justify-content-center"
+                    style={{ background: "transparent", border: "none", cursor: "pointer", fontSize: "2rem" }}
+                    whileTap={{ scale: 1.4 }}
+                    animate={{ scale: isLiked ? 1.3 : 1 }}
                 >
-                    <FaHeart size={40} className="me-2" /> {likeCount}
-                </button>
+                    <motion.span
+                        style={{ color: isLiked ? "#e0245e" : "#222" }}
+                        animate={{ scale: [1, 1.5, 1] }}
+                        transition={{ duration: 0.3 }}
+                    >
+                        ❤️
+                    </motion.span>
+                    <span className="ms-2 fw-bold" style={{ fontSize: "1.2rem" }}>{likeCount}</span>
+                </motion.button>
 
                 {post.caption && (
                     <p
@@ -150,6 +173,6 @@ export default function PostCard({ post, onLikeChange }: PostCardProps) {
                     </p>
                 )}
             </div>
-        </div>
+        </div >
     );
 }
