@@ -1,22 +1,19 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import pool from "@/lib/db";
+import { prisma } from "@/lib/prisma";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const { shortCode } = req.query;
+  const { shortCode } = req.query as { shortCode: string };
+
+  if (!shortCode) return res.redirect("/");
 
   try {
-    const result = await pool.query(
-      "SELECT post_id FROM shares WHERE short_code = $1",
-      [shortCode]
-    );
+    const share = await prisma.share.findUnique({ where: { shortCode } });
 
-    if (result.rows.length === 0) return res.redirect("/");
+    if (!share) return res.redirect("/");
 
-    const postId = result.rows[0].post_id;
-    // ✅ Redirect to single post page
-    res.redirect(`/p/${postId}`);
+    res.redirect(`/p/${share.postId}`);
   } catch (err) {
-    console.error(err);
+    console.error("Redirect error:", err);
     res.redirect("/");
   }
 }
