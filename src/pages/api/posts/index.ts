@@ -4,6 +4,19 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Post } from "@/types";
 
+/**
+ * API Route: /api/posts
+ * Handles fetching paginated posts (GET) and creating a new post (POST)
+ *
+ * GET:
+ *  - Query params: page (default 1), limit (default 10)
+ *  - Returns: Array of posts with user info, like/share counts, and user-specific like status
+ *
+ * POST:
+ *  - Requires authenticated user
+ *  - Body: { imageUrl: string, caption?: string }
+ *  - Creates a new post and returns it
+ */
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === "GET") {
     try {
@@ -15,6 +28,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const session = await getServerSession(req, res, authOptions);
       const userId = session?.user?.id;
 
+      // Fetch paginated posts including user info and likes for the current user
       const posts = await prisma.post.findMany({
         take: limitNum,
         skip,
@@ -25,6 +39,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         },
       });
 
+      // Format posts to match frontend Post type
       const formattedPosts = posts.map((post: Post) => ({
         id: post.id,
         userId: post.userId ?? null,
@@ -34,7 +49,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         like_count: post.like_count || 0,
         share_count: post.share_count || 0,
         is_liked: post.is_liked ?? false,
-        is_shared: post.is_shared ?? false, // optional, if you want
+        is_shared: post.is_shared ?? false,
         user: post.user
           ? {
             id: post.user.id,
@@ -42,7 +57,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             email: post.user.email,
             image: post.user.image,
           }
-          : null, // keep null instead of undefined to match Post type
+          : null,
       }));
 
       res.status(200).json(formattedPosts);
@@ -59,14 +74,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       const { imageUrl, caption } = req.body;
 
-      if (!imageUrl) {
-        return res.status(400).json({ error: "Image URL is required" });
-      }
+      if (!imageUrl) return res.status(400).json({ error: "Image URL is required" });
 
+      // Create a new post for authenticated user
       const post = await prisma.post.create({
         data: {
           userId: session.user.id,
-          imageUrl: imageUrl,
+          imageUrl,
           caption,
         },
       });

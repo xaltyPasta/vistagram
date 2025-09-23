@@ -5,15 +5,25 @@ import { FaShare } from "react-icons/fa";
 import { motion } from "framer-motion";
 
 interface PostCardProps {
+    /** Post data to display */
     post: Post;
+    /** Optional callback when post like/share state changes */
     onLikeChange?: (updatedPost: Post) => void;
 }
 
+/**
+ * PostCard component renders a single post with image, caption, likes, and share functionality.
+ * Handles fetching latest post status, like/unlike, and share actions.
+ *
+ * @param post Post object containing user, image, likes, shares, caption, and timestamps
+ * @param onLikeChange Callback invoked when post status changes
+ */
 export default function PostCard({ post, onLikeChange }: PostCardProps) {
     const [likeCount, setLikeCount] = useState(post.like_count);
     const [shareCount, setShareCount] = useState(post.share_count);
     const [isLiked, setIsLiked] = useState(post.is_liked);
 
+    // Fetch latest post status on mount
     useEffect(() => {
         const fetchPostData = async () => {
             try {
@@ -31,6 +41,7 @@ export default function PostCard({ post, onLikeChange }: PostCardProps) {
         fetchPostData();
     }, [post.id]);
 
+    /** Handles liking/unliking the post */
     const handleLike = async () => {
         try {
             const method = isLiked ? "DELETE" : "POST";
@@ -45,11 +56,13 @@ export default function PostCard({ post, onLikeChange }: PostCardProps) {
             if (onLikeChange) onLikeChange({ ...post, ...data });
         } catch (err) {
             console.error("Error liking/unliking post:", err);
+            // Revert optimistic UI
             setIsLiked(isLiked);
             setLikeCount(prev => (isLiked ? prev + 1 : Math.max(prev - 1, 0)));
         }
     };
 
+    /** Handles sharing the post and copying share link */
     const handleShare = async () => {
         try {
             const res = await fetch(`/api/posts/${post.id}/share`, { method: "POST" });
@@ -70,6 +83,7 @@ export default function PostCard({ post, onLikeChange }: PostCardProps) {
         }
     };
 
+    /** Formats date and time in a readable format */
     const formatDate = (dateInput: string | Date) => {
         const date = typeof dateInput === "string" ? new Date(dateInput) : dateInput;
         const day = date.getDate();
@@ -96,7 +110,7 @@ export default function PostCard({ post, onLikeChange }: PostCardProps) {
             className="card mb-4 border-0 shadow-lg position-relative"
             style={{ borderRadius: "15px", width: "100%", maxWidth: "500px", margin: "auto" }}
         >
-            {/* Post Header with Share button */}
+            {/* Post Header with user info and Share button */}
             <div className="d-flex justify-content-between align-items-center p-3">
                 <div className="d-flex align-items-center">
                     {post.user?.image && (
@@ -110,12 +124,11 @@ export default function PostCard({ post, onLikeChange }: PostCardProps) {
                     )}
                     <div className="d-flex flex-column">
                         <strong>{post.user?.name || post.user?.email}</strong>
-                        <small className="text-muted">
-                            {date} at {time}
-                        </small>
+                        <small className="text-muted">{date} at {time}</small>
                     </div>
                 </div>
 
+                {/* Share button with Framer Motion animation */}
                 <motion.button
                     onClick={handleShare}
                     className="btn d-flex align-items-center p-2"
@@ -129,7 +142,10 @@ export default function PostCard({ post, onLikeChange }: PostCardProps) {
                         outline: "none",
                     }}
                     whileTap={{ scale: 1.3 }}
-                    animate={{ backgroundColor: shareCount > 0 ? "#1DA1F2" : "transparent", color: shareCount > 0 ? "white" : "#000" }}
+                    animate={{
+                        backgroundColor: shareCount > 0 ? "#1DA1F2" : "transparent",
+                        color: shareCount > 0 ? "white" : "#000",
+                    }}
                 >
                     <FaShare className="me-2" size={20} />
                     {shareCount}
@@ -137,15 +153,13 @@ export default function PostCard({ post, onLikeChange }: PostCardProps) {
             </div>
 
             {/* Post Image */}
-            {
-                post.imageUrl && (
-                    <div className="position-relative" style={{ width: "100%", paddingTop: "100%" }}>
-                        <Image src={post.imageUrl} alt="Post image" fill className="object-fit-cover rounded" />
-                    </div>
-                )
-            }
+            {post.imageUrl && (
+                <div className="position-relative" style={{ width: "100%", paddingTop: "100%" }}>
+                    <Image src={post.imageUrl} alt="Post image" fill className="object-fit-cover rounded" />
+                </div>
+            )}
 
-            {/* Bottom actions: Framer Motion Heart + Caption */}
+            {/* Post Actions: Like button and caption */}
             <div className="d-flex flex-column align-items-center px-3 py-3">
                 <motion.button
                     onClick={handleLike}
@@ -173,6 +187,6 @@ export default function PostCard({ post, onLikeChange }: PostCardProps) {
                     </p>
                 )}
             </div>
-        </div >
+        </div>
     );
 }

@@ -1,10 +1,17 @@
+/**
+ * Upload an image file to Cloudinary and return the secure URL.
+ * @param file Image file to upload
+ * @returns Promise<string> Secure URL of the uploaded image
+ * @throws Error if file is not an image or upload fails
+ */
 export const uploadToCloudinary = async (file: File): Promise<string> => {
+    // Validate file type
     if (!file.type.startsWith("image/")) {
         console.error("Invalid file type:", file.type);
         throw new Error("Only image files are allowed");
     }
 
-    // Debugging environment variables
+    // Debug info: environment variables and file details
     console.log(
         "[Cloudinary] Uploading with:",
         "Cloud Name:", process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
@@ -12,6 +19,7 @@ export const uploadToCloudinary = async (file: File): Promise<string> => {
     );
     console.log("[Cloudinary] File info:", file.name, file.size, file.type);
 
+    // Prepare form data
     const formData = new FormData();
     formData.append("file", file);
     formData.append(
@@ -20,14 +28,13 @@ export const uploadToCloudinary = async (file: File): Promise<string> => {
     );
 
     try {
+        // Make POST request to Cloudinary
         const response = await fetch(
             `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
-            {
-                method: "POST",
-                body: formData,
-            }
+            { method: "POST", body: formData }
         );
 
+        // Handle response errors
         if (!response.ok) {
             const errorText = await response.text();
             console.error("[Cloudinary] Response error:", errorText);
@@ -35,6 +42,7 @@ export const uploadToCloudinary = async (file: File): Promise<string> => {
             throw new Error(`Failed to upload image: ${response.status} ${response.statusText}`);
         }
 
+        // Parse JSON response
         const data = await response.json();
         console.log("[Cloudinary] Upload successful:", data.secure_url);
         return data.secure_url;

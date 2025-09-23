@@ -4,6 +4,10 @@ import { useSession } from "next-auth/react";
 import Image from "next/image";
 import { uploadToCloudinary } from "@/lib/cloudinary";
 
+/**
+ * UploadForm component allows authenticated users to upload photos.
+ * Supports gallery selection, camera capture, preview, caption, and submission.
+ */
 export default function UploadForm() {
     const { data: session } = useSession();
     const router = useRouter();
@@ -17,6 +21,7 @@ export default function UploadForm() {
     const [isCamera, setIsCamera] = useState(false);
     const [stream, setStream] = useState<MediaStream | null>(null);
 
+    /** Start device camera for capturing photo */
     const startCamera = async () => {
         try {
             const mediaStream = await navigator.mediaDevices.getUserMedia({
@@ -30,7 +35,7 @@ export default function UploadForm() {
         }
     };
 
-    // Play video when stream changes
+    // Play video stream when it becomes available
     useEffect(() => {
         if (videoRef.current && stream) {
             videoRef.current.srcObject = stream;
@@ -38,12 +43,14 @@ export default function UploadForm() {
         }
     }, [stream]);
 
+    /** Stop camera and release media tracks */
     const stopCamera = () => {
         stream?.getTracks().forEach(track => track.stop());
         setStream(null);
         setIsCamera(false);
     };
 
+    /** Capture photo from video stream */
     const capturePhoto = () => {
         if (!videoRef.current) {
             alert("Video not ready yet. Please try again.");
@@ -69,6 +76,7 @@ export default function UploadForm() {
         }
     };
 
+    /** Handle file selection from gallery */
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file && file.type.startsWith("image/")) {
@@ -79,6 +87,7 @@ export default function UploadForm() {
         }
     };
 
+    /** Submit the selected file to Cloudinary and create post */
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!selectedFile || !session) return;
@@ -100,6 +109,7 @@ export default function UploadForm() {
         }
     };
 
+    /** Reset form to initial state */
     const resetForm = () => {
         setSelectedFile(null);
         setPreviewUrl("");
@@ -108,6 +118,7 @@ export default function UploadForm() {
         if (fileInputRef.current) fileInputRef.current.value = "";
     };
 
+    // Render sign-in prompt if user is not authenticated
     if (!session)
         return (
             <div className="card p-5 text-center">
@@ -118,6 +129,7 @@ export default function UploadForm() {
 
     return (
         <div className="card p-4 mb-4">
+            {/* File selection / camera options */}
             {!selectedFile && !isCamera && (
                 <div className="text-center">
                     <input
@@ -138,6 +150,7 @@ export default function UploadForm() {
                 </div>
             )}
 
+            {/* Camera preview and controls */}
             {isCamera && (
                 <div>
                     <div style={{ width: "100%", paddingBottom: "100%", position: "relative" }}>
@@ -168,6 +181,7 @@ export default function UploadForm() {
                 </div>
             )}
 
+            {/* Image preview and caption form */}
             {selectedFile && previewUrl && (
                 <form onSubmit={handleSubmit}>
                     <div style={{ width: "100%", paddingBottom: "100%", position: "relative", marginTop: "1rem" }}>

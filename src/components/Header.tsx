@@ -4,9 +4,15 @@ import Image from "next/image";
 import { useState } from "react";
 
 interface HeaderProps {
+    /** Optional callback triggered when the upload button is clicked */
     onUploadClick?: () => void;
 }
 
+/**
+ * Formats a string to Title Case.
+ * @param name Input string
+ * @returns Formatted string with each word capitalized
+ */
 function formatName(name: string): string {
     return name
         .toLowerCase()
@@ -15,18 +21,23 @@ function formatName(name: string): string {
         .join(" ");
 }
 
+/**
+ * Header component with logo, authentication buttons, and profile dropdown.
+ * Handles smooth scroll to upload form and displays session-based content.
+ *
+ * @param onUploadClick Optional callback triggered on upload click
+ */
 export default function Header({ onUploadClick }: HeaderProps) {
     const { data: session, status } = useSession();
-    const [open, setOpen] = useState(false);
+    const [open, setOpen] = useState(false); // Profile dropdown toggle
 
-    // Smooth scroll to upload form
+    /** Smooth scroll to the upload form */
     const handleUploadClick = () => {
-        if (onUploadClick) {
-            onUploadClick(); // keep custom behavior if passed
-        }
+        if (onUploadClick) onUploadClick(); // Custom behavior if provided
+
         const uploadForm = document.getElementById("uploadForm");
         if (uploadForm) {
-            const yOffset = -80; // adjust for sticky header height
+            const yOffset = -80; // Adjust for sticky header height
             const y = uploadForm.getBoundingClientRect().top + window.pageYOffset + yOffset;
             window.scrollTo({ top: y, behavior: "smooth" });
         }
@@ -35,6 +46,7 @@ export default function Header({ onUploadClick }: HeaderProps) {
     return (
         <header className="bg-white border-bottom sticky-top">
             <div className="container d-flex justify-content-between align-items-center py-3">
+                {/* Logo */}
                 <Link
                     href="/"
                     className="text-primary fw-bold font-instagram"
@@ -45,6 +57,7 @@ export default function Header({ onUploadClick }: HeaderProps) {
 
                 <div className="d-flex align-items-center gap-3">
                     {status === "loading" ? (
+                        // Loading spinner while session is being fetched
                         <div className="spinner-border text-secondary" role="status">
                             <span className="visually-hidden">Loading...</span>
                         </div>
@@ -66,10 +79,7 @@ export default function Header({ onUploadClick }: HeaderProps) {
                                 {open && (
                                     <div
                                         className="position-absolute end-0 mt-2 p-3 bg-white border rounded shadow-sm"
-                                        style={{
-                                            minWidth: "auto",
-                                            whiteSpace: "nowrap",
-                                        }}
+                                        style={{ minWidth: "auto", whiteSpace: "nowrap" }}
                                     >
                                         <div className="fw-semibold text-dark fs-6">
                                             {session.user.name ? formatName(session.user.name) : "User"}
@@ -85,6 +95,7 @@ export default function Header({ onUploadClick }: HeaderProps) {
                             </div>
                         </>
                     ) : (
+                        // Sign-in button for unauthenticated users
                         <button className="btn btn-primary" onClick={() => signIn("google")}>
                             Sign In with Google
                         </button>

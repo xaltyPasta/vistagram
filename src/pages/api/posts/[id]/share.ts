@@ -3,7 +3,14 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-// Generate a random short code
+/**
+ * API Route: /api/posts/[id]/share
+ * Handles sharing a post for the authenticated user.
+ * Generates a unique short code and increments post's share count.
+ * Method: POST
+ */
+
+/** Generate a random alphanumeric short code */
 function generateShortCode(): string {
   return Math.random().toString(36).substring(2, 10);
 }
@@ -14,6 +21,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ error: "Method not allowed" });
   }
 
+  // Get session and authenticated user
   const session = await getServerSession(req, res, authOptions);
   const userId = session?.user?.id;
   const { id: postId } = req.query as { id: string };
@@ -21,9 +29,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
   try {
-    // Check if this user already shared
+    // Check if user already shared this post
     const existingShare = await prisma.share.findUnique({
-      where: { userId_postId: { userId, postId } }, // requires composite unique key in Prisma
+      where: { userId_postId: { userId, postId } }, // requires composite unique key
     });
 
     if (existingShare) {
@@ -35,7 +43,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     }
 
-    // Generate a unique short code
+    // Generate a unique short code with retries
     let shortCode = generateShortCode();
     let attempts = 0;
     while (attempts < 10) {
@@ -44,10 +52,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       shortCode = generateShortCode();
       attempts++;
     }
-
     if (attempts === 10) return res.status(500).json({ error: "Failed to generate unique share code" });
 
-    // ✅ Create share & increment post share_count atomically
+    // Create share and increment post share_count atomically
     const updatedPost = await prisma.$transaction(async (tx) => {
       await tx.share.create({ data: { userId, postId, shortCode } });
       const post = await tx.post.update({

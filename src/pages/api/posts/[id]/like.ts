@@ -3,7 +3,13 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
+/**
+ * API Route: /api/posts/[id]/like
+ * Handles liking and unliking a post for the authenticated user.
+ * Supports POST to like and DELETE to unlike.
+ */
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  // Get session and authenticated user
   const session = await getServerSession(req, res, authOptions);
   const userId = session?.user?.id;
   const { id: postId } = req.query as { id: string };
@@ -11,11 +17,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
   try {
+    // Check if user already liked the post
     const existingLike = await prisma.like.findUnique({
       where: { userId_postId: { userId, postId } },
     });
 
-    // If POST, like the post if not liked yet
+    // Like the post
     if (req.method === "POST") {
       if (existingLike) return res.status(400).json({ error: "Post already liked" });
 
@@ -30,7 +37,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(200).json({ like_count: post.like_count, is_liked: true });
     }
 
-    // If DELETE, unlike the post if already liked
+    // Unlike the post
     if (req.method === "DELETE") {
       if (!existingLike) return res.status(400).json({ error: "Post not liked yet" });
 
@@ -45,6 +52,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(200).json({ like_count: post.like_count, is_liked: false });
     }
 
+    // Method not allowed
     res.setHeader("Allow", ["POST", "DELETE"]);
     return res.status(405).json({ error: "Method not allowed" });
   } catch (err) {
