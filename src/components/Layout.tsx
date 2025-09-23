@@ -17,7 +17,7 @@ export default function Layout({
                 <title>{title}</title>
                 <meta name="description" content={description} />
                 <meta name="viewport" content="width=device-width, initial-scale=1" />
-                <link rel="icon" href="/favicon.ico" />
+                <link rel="icon" href="/favicon.png" />
             </Head>
             <div className="bg-light min-vh-100">
                 <main>{children}</main>
