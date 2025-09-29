@@ -37,3 +37,7 @@ export interface Share {
     createdAt: Date;
     shareCount: number;
 }
+
+export interface TimeLineProps {
+    filter?: "popular"| "mine" | "default";
+}

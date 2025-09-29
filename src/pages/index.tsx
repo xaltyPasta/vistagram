@@ -27,7 +27,7 @@ export default function HomePage() {
           <UploadForm />
         </div>
 
-        <Timeline />
+        <Timeline filter="default"/>
       </Layout>
 
       <Footer onUploadClick={handleUploadClick} />
