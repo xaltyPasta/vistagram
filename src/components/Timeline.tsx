@@ -1,12 +1,15 @@
 import { useState, useEffect } from "react";
 import { Post } from "@/types";
 import PostCard from "./PostCard";
+import { TimeLineProps } from "@/types";
 
 /**
  * Timeline component fetches and displays a paginated list of posts.
  * Handles loading state, infinite scrolling via "Load More", and post updates.
  */
-export default function Timeline() {
+export default function Timeline({ filter }: TimeLineProps) {
+
+
     const [posts, setPosts] = useState<Post[]>([]); // List of posts
     const [loading, setLoading] = useState(true); // Loading state
     const [page, setPage] = useState(1); // Current page for pagination
@@ -19,12 +22,29 @@ export default function Timeline() {
      */
     const fetchPosts = async (pageNum = 1, append = false) => {
         try {
-            const res = await fetch(`/api/posts?page=${pageNum}&limit=10`);
-            if (!res.ok) throw new Error("Failed to fetch posts");
-            const newPosts = await res.json();
-            if (append) setPosts(prev => [...prev, ...newPosts]);
-            else setPosts(newPosts);
-            setHasMore(newPosts.length === 10); // Check if more posts available
+            if (filter == "default") {
+                const res = await fetch(`/api/posts?page=${pageNum}&limit=10`);
+                if (!res.ok) throw new Error("Failed to fetch posts");
+                const newPosts = await res.json();
+                if (append) setPosts(prev => [...prev, ...newPosts]);
+                setPosts(newPosts);
+                setHasMore(newPosts.length === 10);
+            } else {
+                const query = filter ? `?type=${filter}` : "";
+
+                const res = await fetch(`api/posts/filter${query}`);
+
+                const data = await res.json();
+                setPosts(data);
+                setHasMore(data.length === 10);
+
+            }
+
+            // const res =async ()=>{
+
+            // }
+
+            // Check if more posts available
         } catch (err) {
             console.error(err);
         } finally {
@@ -35,7 +55,7 @@ export default function Timeline() {
     // Fetch initial posts on component mount
     useEffect(() => {
         fetchPosts();
-    }, []);
+    }, [filter]);
 
     /** Load next page of posts */
     const loadMore = () => {
